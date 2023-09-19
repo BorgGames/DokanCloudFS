@@ -26,7 +26,6 @@ using System;
 using System.Composition;
 using System.Globalization;
 using System.IO;
-using System.Runtime.Remoting;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -206,14 +205,6 @@ namespace IgorSoft.DokanCloudFS.IO
             lock (lockObject) {
                 Trace($"{nameof(CopyToAsync)}(destination={destination?.GetType()?.Name}, bufferSize={bufferSize})".ToString(CultureInfo.CurrentCulture));
                 return baseStream.CopyToAsync(destination, bufferSize, cancellationToken);
-            }
-        }
-
-        public override ObjRef CreateObjRef(Type requestedType)
-        {
-            lock (lockObject) {
-                Trace($"{nameof(CreateObjRef)}(requestedType={requestedType?.Name})".ToString(CultureInfo.CurrentCulture));
-                return baseStream.CreateObjRef(requestedType);
             }
         }
 

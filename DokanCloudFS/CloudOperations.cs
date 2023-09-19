@@ -106,7 +106,7 @@ namespace IgorSoft.DokanCloudFS
             return result;
         }
 
-        public void Cleanup(string fileName, DokanFileInfo info)
+        public void Cleanup(string fileName, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -146,7 +146,7 @@ namespace IgorSoft.DokanCloudFS
             AsTrace(nameof(Cleanup), fileName, info, DokanResult.Success);
         }
 
-        public void CloseFile(string fileName, DokanFileInfo info)
+        public void CloseFile(string fileName, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -157,7 +157,7 @@ namespace IgorSoft.DokanCloudFS
             context?.Dispose();
         }
 
-        public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
+        public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -253,7 +253,7 @@ namespace IgorSoft.DokanCloudFS
             }
         }
 
-        public NtStatus DeleteDirectory(string fileName, DokanFileInfo info)
+        public NtStatus DeleteDirectory(string fileName, IDokanFileInfo info)
         {
             var item = GetItem(fileName) as CloudDirectoryNode;
             if (item == null)
@@ -266,7 +266,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(DeleteDirectory), fileName, info, DokanResult.Success);
         }
 
-        public NtStatus DeleteFile(string fileName, DokanFileInfo info)
+        public NtStatus DeleteFile(string fileName, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -276,7 +276,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(DeleteFile), fileName, info, DokanResult.Success);
         }
 
-        public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
+        public NtStatus FindFiles(string fileName, out IList<FileInformation> files, IDokanFileInfo info)
         {
             var parent = GetItem(fileName) as CloudDirectoryNode;
 
@@ -292,7 +292,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(FindFiles), fileName, info, DokanResult.Success, $"out [{files.Count}]".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus FindFilesWithPattern(string fileName, string searchPattern, out IList<FileInformation> files, DokanFileInfo info)
+        public NtStatus FindFilesWithPattern(string fileName, string searchPattern, out IList<FileInformation> files, IDokanFileInfo info)
         {
             if (searchPattern == null)
                 throw new ArgumentNullException(nameof(searchPattern));
@@ -313,13 +313,13 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(FindFilesWithPattern), fileName, info, DokanResult.Success, searchPattern, $"out [{files.Count}]".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus FindStreams(string fileName, out IList<FileInformation> streams, DokanFileInfo info)
+        public NtStatus FindStreams(string fileName, out IList<FileInformation> streams, IDokanFileInfo info)
         {
             streams = Enumerable.Empty<FileInformation>().ToList();
             return AsWarn(nameof(FindStreams), fileName, info, DokanResult.NotImplemented, $"out [{streams.Count}]".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
+        public NtStatus FlushFileBuffers(string fileName, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -333,7 +333,7 @@ namespace IgorSoft.DokanCloudFS
             }
         }
 
-        public NtStatus GetDiskFreeSpace(out long free, out long total, out long used, DokanFileInfo info)
+        public NtStatus GetDiskFreeSpace(out long free, out long total, out long used, IDokanFileInfo info)
         {
             free = drive.Free ?? 0;
             used = drive.Used ?? 0;
@@ -342,7 +342,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(GetDiskFreeSpace), null, info, DokanResult.Success, $"out {free}", $"out {total}", $"out {used}".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
+        public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -362,7 +362,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(GetFileInformation), fileName, info, DokanResult.Success, $"out {{{fileInfo.FileName}, [{fileInfo.Length}], [{fileInfo.Attributes}], {fileInfo.CreationTime}, {fileInfo.LastWriteTime}, {fileInfo.LastAccessTime}}}".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus GetFileSecurity(string fileName, out FileSystemSecurity security, AccessControlSections sections, DokanFileInfo info)
+        public NtStatus GetFileSecurity(string fileName, out FileSystemSecurity security, AccessControlSections sections, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -375,17 +375,18 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(GetFileSecurity), fileName, info, DokanResult.Success, $"out {security}", $"{sections}".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, DokanFileInfo info)
+        public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, out uint maximumComponentLength, IDokanFileInfo info)
         {
             volumeLabel = drive.DisplayRoot;
             features = FileSystemFeatures.CaseSensitiveSearch | FileSystemFeatures.CasePreservedNames | FileSystemFeatures.UnicodeOnDisk |
                        FileSystemFeatures.PersistentAcls | FileSystemFeatures.SupportsRemoteStorage;
             fileSystemName = nameof(DokanCloudFS);
+            maximumComponentLength = 250;
 
             return AsTrace(nameof(GetVolumeInformation), null, info, DokanResult.Success, $"out {volumeLabel}", $"out {features}", $"out {fileSystemName}".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus LockFile(string fileName, long offset, long length, DokanFileInfo info)
+        public NtStatus LockFile(string fileName, long offset, long length, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -399,12 +400,12 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(LockFile), fileName, info, DokanResult.Success, offset.ToString(CultureInfo.InvariantCulture), length.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus Mounted(DokanFileInfo info)
+        public NtStatus Mounted(string mountPoint, IDokanFileInfo info)
         {
-            return AsTrace(nameof(Mounted), null, info, DokanResult.Success);
+            return AsTrace(nameof(Mounted), mountPoint, info, DokanResult.Success);
         }
 
-        public NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
+        public NtStatus MoveFile(string oldName, string newName, bool replace, IDokanFileInfo info)
         {
             var item = GetItem(oldName);
             if (item == null)
@@ -419,7 +420,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(MoveFile), oldName, info, DokanResult.Success, newName, replace.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus OpenDirectory(string fileName, DokanFileInfo info)
+        public NtStatus OpenDirectory(string fileName, IDokanFileInfo info)
         {
             var item = GetItem(fileName) as CloudDirectoryNode;
             if (item == null)
@@ -429,7 +430,7 @@ namespace IgorSoft.DokanCloudFS
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
+        public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, IDokanFileInfo info)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
@@ -456,7 +457,7 @@ namespace IgorSoft.DokanCloudFS
             return AsDebug(nameof(ReadFile), fileName, info, DokanResult.Success, offset.ToString(CultureInfo.InvariantCulture), $"out {bytesRead}".ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
+        public NtStatus SetAllocationSize(string fileName, long length, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -491,29 +492,29 @@ namespace IgorSoft.DokanCloudFS
             return AsDebug(nameof(SetAllocationSize), fileName, info, DokanResult.Success, length.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
+        public NtStatus SetEndOfFile(string fileName, long length, IDokanFileInfo info)
         {
             return AsDebug(nameof(SetEndOfFile), fileName, info, DokanResult.Success, length.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
+        public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, IDokanFileInfo info)
         {
             // TODO: Possibly return NotImplemented here
             return AsDebug(nameof(SetFileAttributes), fileName, info, DokanResult.Success, attributes.ToString());
         }
 
-        public NtStatus SetFileSecurity(string fileName, FileSystemSecurity security, AccessControlSections sections, DokanFileInfo info)
+        public NtStatus SetFileSecurity(string fileName, FileSystemSecurity security, AccessControlSections sections, IDokanFileInfo info)
         {
             return AsDebug(nameof(SetFileAttributes), fileName, info, DokanResult.NotImplemented, sections.ToString());
         }
 
-        public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, DokanFileInfo info)
+        public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, IDokanFileInfo info)
         {
             // TODO: Possibly return NotImplemented here
             return AsDebug(nameof(SetFileTime), fileName, info, DokanResult.Success, creationTime.ToString(), lastAccessTime.ToString(), lastWriteTime.ToString());
         }
 
-        public NtStatus UnlockFile(string fileName, long offset, long length, DokanFileInfo info)
+        public NtStatus UnlockFile(string fileName, long offset, long length, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -526,7 +527,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(UnlockFile), fileName, info, DokanResult.Success, offset.ToString(CultureInfo.InvariantCulture), length.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus Unmounted(DokanFileInfo info)
+        public NtStatus Unmounted(IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -539,7 +540,7 @@ namespace IgorSoft.DokanCloudFS
             return result;
         }
 
-        public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
+        public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, IDokanFileInfo info)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));

@@ -26,8 +26,9 @@ using System;
 using System.Composition;
 using System.Reflection;
 
-namespace IgorSoft.DokanCloudFS.Tests
-{
+using IgorSoft.DokanCloudFS.Composition;
+
+namespace IgorSoft.DokanCloudFS.Tests {
     public sealed partial class CompositionInitializerTests
     {
         private static class Fixture

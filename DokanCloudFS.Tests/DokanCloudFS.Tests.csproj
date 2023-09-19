@@ -43,9 +43,8 @@
       <HintPath>..\packages\Castle.Core.4.0.0\lib\net45\Castle.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DokanNet, Version=1.1.0.3, Culture=neutral, PublicKeyToken=cef3dedf553bda55, processorArchitecture=MSIL">
-      <HintPath>..\packages\DokanNet.1.1.0.3\lib\net46\DokanNet.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DokanNet, Version=2.0.5.1, Culture=neutral, PublicKeyToken=cef3dedf553bda55, processorArchitecture=MSIL">
+      <HintPath>..\packages\DokanNet.2.0.5.1\lib\net40\DokanNet.dll</HintPath>
     </Reference>
     <Reference Include="FsCheck, Version=2.8.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FsCheck.2.8.0\lib\net452\FsCheck.dll</HintPath>

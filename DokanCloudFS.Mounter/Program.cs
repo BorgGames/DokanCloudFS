@@ -38,6 +38,7 @@ using IgorSoft.CloudFS.Authentication;
 using IgorSoft.CloudFS.Interface;
 using IgorSoft.DokanCloudFS.Mounter.Config;
 using IgorSoft.DokanCloudFS.Parameters;
+using IgorSoft.DokanCloudFS.Composition;
 
 namespace IgorSoft.DokanCloudFS.Mounter
 {
@@ -46,6 +47,8 @@ namespace IgorSoft.DokanCloudFS.Mounter
         private static string settingsPassPhrase;
 
         private static ILogger logger;
+
+        static readonly Dokan Dokan = new Dokan(new DokanNet.Logging.TraceLogger());
 
         public sealed class ExportProvider
         {
@@ -147,7 +150,19 @@ namespace IgorSoft.DokanCloudFS.Mounter
                             var operations = new CloudOperations(drive, logger);
 
                             // HACK: handle non-unique parameter set of DokanOperations.Mount() by explicitely specifying AllocationUnitSize and SectorSize
-                            tasks.Add(Task.Run(() => operations.Mount(driveElement.Root, DokanOptions.RemovableDrive | DokanOptions.MountManager | DokanOptions.CurrentSession, mountSection.Threads, 1100, TimeSpan.FromSeconds(driveElement.Timeout != 0 ? driveElement.Timeout : 20), null, 512, 512), tokenSource.Token));
+                            tasks.Add(Task.Run(() => {
+                                var builder = new DokanInstanceBuilder(Dokan)
+                                    .ConfigureLogger(() => new DokanNet.Logging.TraceLogger())
+                                    .ConfigureOptions(options =>
+                                    {
+                                        options.Options = DokanOptions.RemovableDrive | DokanOptions.MountManager | DokanOptions.CurrentSession;
+                                        options.MountPoint = driveElement.Root;
+                                        options.SingleThread = mountSection.Threads <= 1;
+                                        options.TimeOut = TimeSpan.FromSeconds(driveElement.Timeout != 0 ? driveElement.Timeout : 20);
+                                        options.AllocationUnitSize = options.SectorSize = 512;
+                                    });
+                                return builder.Build(operations);
+                            }, tokenSource.Token));
 
                             var driveInfo = new DriveInfo(driveElement.Root);
                             while (!driveInfo.IsReady)

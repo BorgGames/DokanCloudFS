@@ -24,10 +24,12 @@ SOFTWARE.
 
 using System;
 using System.Composition;
+
+using IgorSoft.DokanCloudFS.Composition;
+
 using NLog;
 
-namespace IgorSoft.DokanCloudFS.Tests
-{
+namespace IgorSoft.DokanCloudFS.Tests {
     internal sealed class ExportProvider
     {
         private static ILogger logger;

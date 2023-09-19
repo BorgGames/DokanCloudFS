@@ -29,9 +29,10 @@ using System.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
 using IgorSoft.AppDomainResolver;
 
-namespace IgorSoft.DokanCloudFS
+namespace IgorSoft.DokanCloudFS.Composition
 {
     internal static class CompositionInitializer
     {

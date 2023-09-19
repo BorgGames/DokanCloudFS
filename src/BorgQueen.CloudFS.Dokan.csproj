@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>IgorSoft.DokanCloudFS</RootNamespace>
+
+    <!-- Package stuff -->
+    <Version>0.0.1</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- The following is recommended for public projects -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <DebugSymbols>true</DebugSymbols>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DokanCloudFS\Extensions\*.cs" Link="Extensions\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\DokanCloudFS\IO\*.cs" Link="IO\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\DokanCloudFS\Parameters\*.cs" Link="Parameters\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\DokanCloudFS\*.cs" />
+    <Compile Remove="..\DokanCloudFS\IO\Encryption.cs" />
+    <EmbeddedResource Include="..\DokanCloudFS\Resources.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BorgQueen.CloudFS.Interfaces" Version="0.0.1" />
+    <PackageReference Include="DokanNet" Version="2.0.5.1" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="NLog" Version="5.2.4" />
+  </ItemGroup>
+
+</Project>

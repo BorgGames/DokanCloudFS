@@ -26,22 +26,26 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+
 using IgorSoft.CloudFS.Interface;
 using IgorSoft.CloudFS.Interface.Composition;
 using IgorSoft.CloudFS.Interface.IO;
+#if COMPOSITION
+using IgorSoft.DokanCloudFS.Composition;
+#endif
 using IgorSoft.DokanCloudFS.IO;
 using IgorSoft.DokanCloudFS.Parameters;
 
 namespace IgorSoft.DokanCloudFS
 {
     [System.Diagnostics.DebuggerDisplay("{DebuggerDisplay,nq}")]
-    internal class AsyncCloudDrive : CloudDriveBase, ICloudDrive
+    public sealed class AsyncCloudDrive : CloudDriveBase, ICloudDrive
     {
         private readonly IAsyncCloudGateway gateway;
 
         private readonly IDictionary<string, string> parameters;
 
-        public AsyncCloudDrive(RootName rootName, IAsyncCloudGateway gateway, CloudDriveParameters parameters) : base(rootName, parameters)
+        public AsyncCloudDrive(RootName rootName, IAsyncCloudGateway gateway, CloudDriveParameters parameters) : base(rootName)
         {
             this.gateway = gateway;
             this.parameters = parameters.Parameters;
@@ -53,7 +57,7 @@ namespace IgorSoft.DokanCloudFS
         {
             try {
                 if (drive == null) {
-                    drive = gateway.GetDriveAsync(rootName, apiKey, parameters).Result;
+                    drive = gateway.GetDriveAsync(rootName, null, parameters).Result;
                     drive.Name = DisplayRoot + Path.VolumeSeparatorChar;
                 }
                 return drive;
@@ -64,14 +68,14 @@ namespace IgorSoft.DokanCloudFS
 
         public bool TryAuthenticate()
         {
-            return gateway.TryAuthenticateAsync(rootName, apiKey, parameters).Result;
+            return gateway.TryAuthenticateAsync(rootName, null, parameters).Result;
         }
 
         public RootDirectoryInfoContract GetRoot()
         {
             return ExecuteInSemaphore(() => {
                 GetDrive();
-                var root = gateway.GetRootAsync(rootName, apiKey, parameters).Result;
+                var root = gateway.GetRootAsync(rootName, null, parameters).Result;
                 root.Drive = drive;
                 return root;
             }, nameof(GetRoot));
@@ -89,12 +93,12 @@ namespace IgorSoft.DokanCloudFS
             return ExecuteInSemaphore(() => {
                 var gatewayContent = gateway.GetContentAsync(rootName, source.Id).Result.ToSeekableStream();
 
-                var content = gatewayContent.DecryptOrPass(encryptionKey);
+                var content = gatewayContent;
                 if (content != gatewayContent)
                     gatewayContent.Close();
                 source.Size = (FileSize)content.Length;
 
-#if DEBUG
+#if DEBUG && COMPOSITION
                 CompositionInitializer.SatisfyImports(content = new TraceStream(nameof(GetContent), source.Name, content));
 #endif
                 return content;
@@ -104,10 +108,10 @@ namespace IgorSoft.DokanCloudFS
         public void SetContent(FileInfoContract target, Stream content)
         {
             ExecuteInSemaphore(() => {
-                var gatewayContent = content.EncryptOrPass(encryptionKey);
+                var gatewayContent = content;
                 target.Size = (FileSize)content.Length;
 
-#if DEBUG
+#if DEBUG && COMPOSITION
                 CompositionInitializer.SatisfyImports(gatewayContent = new TraceStream(nameof(SetContent), target.Name, gatewayContent));
 #endif
                 Func<FileSystemInfoLocator> locator = () => new FileSystemInfoLocator(target);
@@ -142,7 +146,7 @@ namespace IgorSoft.DokanCloudFS
                 if (content.Length == 0)
                     return new ProxyFileInfoContract(name);
 
-                var gatewayContent = content.EncryptOrPass(encryptionKey);
+                var gatewayContent = content;
 
                 var result = gateway.NewFileItemAsync(rootName, parent.Id, name, gatewayContent, null).Result;
                 result.Size = (FileSize)content.Length;

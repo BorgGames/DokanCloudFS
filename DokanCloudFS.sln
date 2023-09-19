@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanCloudFS", "DokanCloudFS\DokanCloudFS.csproj", "{87F4BEE8-FE6A-4ACF-9234-FDAEB28C786B}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -22,6 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{7D6A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0BB1F64B-56CD-4856-A0C4-D35092681ED7}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		Appveyor.yml = Appveyor.yml
 		CommonAssemblyInfo.cs = CommonAssemblyInfo.cs
 		DokanCloudFS.runsettings = DokanCloudFS.runsettings
@@ -37,6 +38,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanCloudFS.LegacyGateways", "DokanCloudFS.LegacyGateways\DokanCloudFS.LegacyGateways.csproj", "{B5EB391C-3702-4D38-A8C9-F281645A45D1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanCloudFS.AdditionalPackages", "DokanCloudFS.AdditionalPackages\DokanCloudFS.AdditionalPackages.csproj", "{EDF569CA-98DD-4CCC-82F5-C9DADC15C67A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BorgQueen.CloudFS.Dokan", "src\BorgQueen.CloudFS.Dokan.csproj", "{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -124,8 +127,23 @@ Global
 		{EDF569CA-98DD-4CCC-82F5-C9DADC15C67A}.Release (NuGet-Signed)|Any CPU.Build.0 = Release|Any CPU
 		{EDF569CA-98DD-4CCC-82F5-C9DADC15C67A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDF569CA-98DD-4CCC-82F5-C9DADC15C67A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Debug (NuGet)|Any CPU.ActiveCfg = Debug|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Debug (NuGet)|Any CPU.Build.0 = Debug|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Debug (NuGet-Signed)|Any CPU.ActiveCfg = Debug|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Debug (NuGet-Signed)|Any CPU.Build.0 = Debug|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Release (NuGet)|Any CPU.ActiveCfg = Release|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Release (NuGet)|Any CPU.Build.0 = Release|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Release (NuGet-Signed)|Any CPU.ActiveCfg = Release|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Release (NuGet-Signed)|Any CPU.Build.0 = Release|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{879DBD4F-D11D-4DC9-BBD5-CBE68089FA4D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5421E37D-D127-4F93-BB1C-343328464C2F}
 	EndGlobalSection
 EndGlobal

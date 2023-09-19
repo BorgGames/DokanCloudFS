@@ -22,35 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
 using System.IO;
-using System.Security.Cryptography;
 
 namespace IgorSoft.DokanCloudFS.IO
 {
     internal static class StreamExtensions
     {
         private const int MAX_BULKDOWNLOAD_SIZE = 1 << 29;
-
-        public static Stream EncryptOrPass(this Stream stream, string encryptionKey)
-        {
-            return !string.IsNullOrEmpty(encryptionKey)
-                ? Process(stream, encryptionKey, SharpAESCrypt.OperationMode.Encrypt)
-                : stream;
-        }
-
-        public static Stream DecryptOrPass(this Stream stream, string encryptionKey)
-        {
-            if (!string.IsNullOrEmpty(encryptionKey))
-                try {
-                    stream = Process(stream, encryptionKey, SharpAESCrypt.OperationMode.Decrypt);
-                } catch (InvalidDataException) {
-                    // Ignore InvalidDataException to enable reading of unencrypted content from cloud volumes
-                    stream.Seek(0, SeekOrigin.Begin);
-                }
-
-            return stream;
-        }
 
         public static Stream ToSeekableStream(this Stream stream)
         {
@@ -63,24 +41,6 @@ namespace IgorSoft.DokanCloudFS.IO
             }
 
             return stream;
-        }
-
-        private static Stream Process(Stream stream, string encryptionKey, SharpAESCrypt.OperationMode mode)
-        {
-            var buffer = new MemoryStream();
-
-            switch (mode) {
-                case SharpAESCrypt.OperationMode.Encrypt:
-                    SharpAESCrypt.SharpAESCrypt.Encrypt(encryptionKey, stream, buffer);
-                    break;
-                case SharpAESCrypt.OperationMode.Decrypt:
-                    SharpAESCrypt.SharpAESCrypt.Decrypt(encryptionKey, stream, buffer);
-                    break;
-            }
-
-
-            buffer.Seek(0, SeekOrigin.Begin);
-            return buffer;
         }
     }
 }

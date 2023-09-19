@@ -34,7 +34,7 @@ namespace IgorSoft.DokanCloudFS
     [System.Diagnostics.DebuggerDisplay("{DebuggerDisplay,nq}")]
     internal partial class CloudOperations
     {
-        private NtStatus AsTrace(string method, string fileName, DokanFileInfo info, NtStatus result, params string[] parameters)
+        private NtStatus AsTrace(string method, string fileName, IDokanFileInfo info, NtStatus result, params string[] parameters)
         {
             var extraParameters = parameters != null && parameters.Length > 0 ? ", " + string.Join(", ", parameters) : string.Empty;
 
@@ -43,14 +43,14 @@ namespace IgorSoft.DokanCloudFS
             return result;
         }
 
-        private NtStatus AsTrace(string method, string fileName, DokanFileInfo info, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, NtStatus result)
+        private NtStatus AsTrace(string method, string fileName, IDokanFileInfo info, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, NtStatus result)
         {
             logger?.Trace($"{System.Threading.Thread.CurrentThread.ManagedThreadId:D2} / {drive.DisplayRoot} {method}({fileName}, {info.ToTrace()}, [{access}], [{share}], [{mode}], [{options}], [{attributes}]) -> {result}".ToString(CultureInfo.CurrentCulture));
 
             return result;
         }
 
-        private NtStatus AsDebug(string method, string fileName, DokanFileInfo info, NtStatus result, params string[] parameters)
+        private NtStatus AsDebug(string method, string fileName, IDokanFileInfo info, NtStatus result, params string[] parameters)
         {
             var extraParameters = parameters != null && parameters.Length > 0 ? ", " + string.Join(", ", parameters) : string.Empty;
 
@@ -59,14 +59,14 @@ namespace IgorSoft.DokanCloudFS
             return result;
         }
 
-        private NtStatus AsDebug(string method, string fileName, DokanFileInfo info, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, NtStatus result)
+        private NtStatus AsDebug(string method, string fileName, IDokanFileInfo info, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, NtStatus result)
         {
             logger?.Debug($"{System.Threading.Thread.CurrentThread.ManagedThreadId:D2} / {drive.DisplayRoot} {method}({fileName}, {info.ToTrace()}, [{access}], [{share}], [{mode}], [{options}], [{attributes}]) -> {result}".ToString(CultureInfo.CurrentCulture));
 
             return result;
         }
 
-        private NtStatus AsWarn(string method, string fileName, DokanFileInfo info, NtStatus result, params string[] parameters)
+        private NtStatus AsWarn(string method, string fileName, IDokanFileInfo info, NtStatus result, params string[] parameters)
         {
             var extraParameters = parameters != null && parameters.Length > 0 ? ", " + string.Join(", ", parameters) : string.Empty;
 
@@ -75,7 +75,7 @@ namespace IgorSoft.DokanCloudFS
             return result;
         }
 
-        private NtStatus AsError(string method, string fileName, DokanFileInfo info, NtStatus result, params string[] parameters)
+        private NtStatus AsError(string method, string fileName, IDokanFileInfo info, NtStatus result, params string[] parameters)
         {
             var extraParameters = parameters != null && parameters.Length > 0 ? ", " + string.Join(", ", parameters) : string.Empty;
 
@@ -84,7 +84,7 @@ namespace IgorSoft.DokanCloudFS
             return result;
         }
 
-        private NtStatus AsError(string method, string fileName, DokanFileInfo info, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, NtStatus result)
+        private NtStatus AsError(string method, string fileName, IDokanFileInfo info, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, NtStatus result)
         {
             logger?.Error($"{System.Threading.Thread.CurrentThread.ManagedThreadId:D2} / {drive.DisplayRoot} {method}({fileName}, {info.ToTrace()}, [{access}], [{share}], [{mode}], [{options}], [{attributes}]) -> {result}".ToString(CultureInfo.CurrentCulture));
 

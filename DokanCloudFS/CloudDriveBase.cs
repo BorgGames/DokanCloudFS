@@ -25,19 +25,14 @@ SOFTWARE.
 using System;
 using System.Globalization;
 using System.Threading;
-using IgorSoft.DokanCloudFS.Parameters;
 using IgorSoft.CloudFS.Interface;
 using IgorSoft.CloudFS.Interface.IO;
 
 namespace IgorSoft.DokanCloudFS
 {
-    internal abstract class CloudDriveBase : IDisposable
+    public abstract class CloudDriveBase : IDisposable
     {
         protected readonly RootName rootName;
-
-        protected readonly string apiKey;
-
-        protected readonly string encryptionKey;
 
         protected DriveInfoContract drive;
 
@@ -49,16 +44,10 @@ namespace IgorSoft.DokanCloudFS
 
         public long? Used => ExecuteInSemaphore(() => GetDrive().UsedSpace, $"get_{nameof(Used)}".ToString(CultureInfo.InvariantCulture));
 
-        protected CloudDriveBase(RootName rootName, CloudDriveParameters parameters)
+        protected CloudDriveBase(RootName rootName)
         {
             this.rootName = rootName;
             DisplayRoot = rootName.Value;
-            if (parameters != null) {
-                apiKey = parameters.ApiKey;
-                encryptionKey = parameters.EncryptionKey;
-            }
-            if (string.IsNullOrEmpty(encryptionKey))
-                DisplayRoot = DisplayRoot.Insert(0, "*");
         }
 
         protected void ExecuteInSemaphore(Action action, string methodName, bool invalidateDrive = false)

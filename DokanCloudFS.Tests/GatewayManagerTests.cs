@@ -27,6 +27,7 @@ using System.Composition;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IgorSoft.CloudFS.Interface.Composition;
+using IgorSoft.DokanCloudFS.Composition;
 
 namespace IgorSoft.DokanCloudFS.Tests
 {

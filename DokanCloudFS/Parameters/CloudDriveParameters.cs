@@ -29,10 +29,6 @@ namespace IgorSoft.DokanCloudFS.Parameters
 {
     public class CloudDriveParameters
     {
-        public string ApiKey { get; set; }
-
-        public string EncryptionKey { get; set; }
-
         public IDictionary<string, string> Parameters { get; set; }
     }
 }

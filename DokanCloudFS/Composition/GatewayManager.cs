@@ -25,9 +25,10 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.Composition;
+
 using IgorSoft.CloudFS.Interface.Composition;
 
-namespace IgorSoft.DokanCloudFS
+namespace IgorSoft.DokanCloudFS.Composition
 {
     [Export(typeof(IGatewayManager))]
     internal sealed class GatewayManager : IGatewayManager

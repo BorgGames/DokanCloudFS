@@ -26,10 +26,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
+using IgorSoft.DokanCloudFS.Composition;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace IgorSoft.DokanCloudFS.Tests
-{
+namespace IgorSoft.DokanCloudFS.Tests {
     [TestClass]
     public sealed partial class CompositionInitializerTests
     {
