@@ -8,6 +8,8 @@
     <Version>0.0.2</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Description>DokanCloudFS library allows mounting various cloud storage services as virtual disks on Windows.</Description>
+    <PackageTags>VFS;Virtual File System;Gateway;io;filesystem;cloud;drive;Windows;OneDrive</PackageTags>
 
     <!-- The following is recommended for public projects -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

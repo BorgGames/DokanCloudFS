@@ -1,13 +1,9 @@
 # DokanCloudFS
 **DokanCloudFS** is a virtual filesystem for various publicly accessible cloud storage services on the Microsoft Windows platform.
 
-[![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/viciousviper/CloudFS/blob/master/LICENSE.md)
-[![Release](https://img.shields.io/github/tag/viciousviper/CloudFS.svg)](https://github.com/viciousviper/CloudFS/releases)
-
-| Branch  | Build status | Code coverage | Code analysis |
-| :------ | :----------: | :-----------: | :-----------: |
-| master  | [![Build status](https://ci.appveyor.com/api/projects/status/fynac58uetvtt43t/branch/master?svg=true)](https://ci.appveyor.com/project/viciousviper/dokancloudfs) | [![codecov.io](https://codecov.io/github/viciousviper/DokanCloudFS/coverage.svg?branch=master)](https://codecov.io/github/viciousviper/DokanCloudFS?branch=master)  | [![Code analysis](https://scan.coverity.com/projects/7853/badge.svg)](https://scan.coverity.com/projects/viciousviper-dokancloudfs) |
-| develop | [![Build status](https://ci.appveyor.com/api/projects/status/fynac58uetvtt43t/branch/develop?svg=true)](https://ci.appveyor.com/project/viciousviper/dokancloudfs) | [![codecov.io](https://codecov.io/github/viciousviper/DokanCloudFS/coverage.svg?branch=develop)](https://codecov.io/github/viciousviper/DokanCloudFS?branch=develop) | |
+[![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/BorgGames/DokanCloudFS/blob/master/LICENSE.md)
+[![NuGet Package](https://img.shields.io/nuget/v/BorgQueen.CloudFS.Dokan)](https://www.nuget.org/packages/BorgQueen.CloudFS.Dokan/)
+[![Release](https://img.shields.io/github/tag/BorgGames/DokanCloudFS.svg)](https://github.com/BorgGames/DokanCloudFS/releases)
 
 ## Objective
 
@@ -195,6 +191,8 @@ You have been warned.
 
 | Date       | Version     | Comments                                                                       |
 | :--------- | :---------- | :----------------------------------------------------------------------------- |
+| 2023-09-21 | 0.0.2 | - Made `CloudOperations` public to enable custom mounters. |
+| 2023-09-21 | 0.0.1 | - Retargeted to .NET Standard 2.0<br/> - Updated DokanNet to version 2.0.5.<br/>- Use BorgQueen.CloudFS.Interfaces package.<br/>- Removed built-in storage encryption.<br/>- Deferred API keys to the underlying gateway. |
 | 2017-03-31 | 1.0.11-beta | - Updated DokanNet to version 1.1.0.<br/>- Updated CloudFS to version 1.0.10-beta.<br/>- Fixed NuGet references. |
 | 2016-10-05 | 1.0.10.1-beta | - Updated CloudFS to version 1.0.10-beta.<br/>- Fixed NuGet package references. |
 | 2016-10-02 | 1.0.10-beta | - Updated DokanNet to version 1.1.0.<br/>- Updated CloudFS to version 1.0.10-beta.<br/>- Fixed NuGet references. |
