@@ -32,7 +32,7 @@ using IgorSoft.DokanCloudFS.Extensions;
 namespace IgorSoft.DokanCloudFS
 {
     [System.Diagnostics.DebuggerDisplay("{DebuggerDisplay,nq}")]
-    internal partial class CloudOperations
+    public partial class CloudOperations
     {
         private NtStatus AsTrace(string method, string fileName, IDokanFileInfo info, NtStatus result, params string[] parameters)
         {

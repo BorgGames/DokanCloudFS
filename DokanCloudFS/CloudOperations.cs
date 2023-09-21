@@ -40,7 +40,7 @@ using IgorSoft.DokanCloudFS.IO;
 namespace IgorSoft.DokanCloudFS
 {
     [System.Diagnostics.DebuggerDisplay("{DebuggerDisplay,nq}")]
-    internal partial class CloudOperations : IDokanOperations
+    public partial class CloudOperations : IDokanOperations
     {
         [System.Diagnostics.DebuggerDisplay("{DebuggerDisplay,nq}")]
         private class StreamContext : IDisposable
@@ -84,6 +84,18 @@ namespace IgorSoft.DokanCloudFS
         private static readonly IList<FileInformation> emptyDirectoryDefaultFiles = new[] { ".", ".." }.Select(fileName =>
             new FileInformation() { FileName = fileName, Attributes = FileAttributes.Directory, CreationTime = DateTime.Today, LastWriteTime = DateTime.Today, LastAccessTime = DateTime.Today }
         ).ToList();
+
+        public CloudOperations(ICloudDrive drive, DirectoryInfoContract root, ILogger logger)
+        {
+            if (drive == null)
+                throw new ArgumentNullException(nameof(drive));
+            if (root == null)
+                throw new ArgumentNullException(nameof(root));
+
+            this.drive = drive;
+            this.root = new CloudDirectoryNode(root);
+            this.logger = logger;
+        }
 
         public CloudOperations(ICloudDrive drive, ILogger logger)
         {
