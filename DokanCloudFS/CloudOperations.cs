@@ -47,6 +47,8 @@ namespace IgorSoft.DokanCloudFS
         {
             public CloudFileNode File { get; }
 
+            public FileAccess OriginalAccess { get; }
+
             public FileAccess Access { get; }
 
             public Stream Stream { get; set; }
@@ -57,10 +59,11 @@ namespace IgorSoft.DokanCloudFS
 
             public bool CanWriteDelayed => Access.HasFlag(FileAccess.WriteData) && (Stream?.CanRead ?? false) && Task == null;
 
-            public StreamContext(CloudFileNode file, FileAccess access)
+            public StreamContext(CloudFileNode file, FileAccess access, FileAccess originalAccess)
             {
                 File = file;
                 Access = access;
+                OriginalAccess = originalAccess;
             }
 
             public void Dispose()
@@ -203,21 +206,18 @@ namespace IgorSoft.DokanCloudFS
                     else
                         fileItem = parent.NewFileItem(drive, itemName);
 
-                    info.Context = new StreamContext(fileItem, FileAccess.WriteData);
+                    info.Context = new StreamContext(fileItem, FileAccess.WriteData, originalAccess: access);
 
                     return AsTrace(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.Success);
                 case FileMode.Open:
                     fileItem = item as CloudFileNode;
                     if (fileItem != null) {
-                        if (access.HasFlag(FileAccess.ReadData))
-                            info.Context = new StreamContext(fileItem, FileAccess.ReadData);
-                        else if (access.HasFlag(FileAccess.WriteData))
-                            info.Context = new StreamContext(fileItem, FileAccess.WriteData);
-                        else if (access.HasFlag(FileAccess.Delete))
-                            info.Context = new StreamContext(fileItem, FileAccess.Delete);
-//                        else if (!access.HasFlag(FileAccess.ReadAttributes))
-                        else if (!access.HasFlag(FileAccess.ReadAttributes) && !access.HasFlag(FileAccess.ReadPermissions))
+                        var realAccess = Normalize(access);
+                        if (!realAccess.HasFlag(FileAccess.ReadAttributes) && !realAccess.HasFlag(FileAccess.ReadPermissions)
+                            && !realAccess.HasFlag(FileAccess.ReadData) && !realAccess.HasFlag(FileAccess.WriteData)
+                            && !realAccess.HasFlag(FileAccess.Delete))
                             return AsDebug(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.NotImplemented);
+                        info.Context = new StreamContext(fileItem, realAccess, originalAccess: access);
                     } else {
                         info.IsDirectory = item != null;
                     }
@@ -230,9 +230,9 @@ namespace IgorSoft.DokanCloudFS
                     fileItem = item as CloudFileNode ?? parent.NewFileItem(drive, itemName);
 
                     if (access.HasFlag(FileAccess.ReadData) && !access.HasFlag(FileAccess.WriteData))
-                        info.Context = new StreamContext(fileItem, FileAccess.ReadData);
+                        info.Context = new StreamContext(fileItem, FileAccess.ReadData, originalAccess: access);
                     else
-                        info.Context = new StreamContext(fileItem, FileAccess.WriteData);
+                        info.Context = new StreamContext(fileItem, FileAccess.WriteData, originalAccess: access);
 
                     return AsTrace(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.Success);
                 case FileMode.CreateNew:
@@ -244,7 +244,7 @@ namespace IgorSoft.DokanCloudFS
                     } else {
                         fileItem = parent.NewFileItem(drive, itemName);
 
-                        info.Context = new StreamContext(fileItem, FileAccess.WriteData);
+                        info.Context = new StreamContext(fileItem, FileAccess.WriteData, originalAccess: access);
                     }
                     return AsTrace(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.Success);
                 case FileMode.Append:
@@ -506,6 +506,24 @@ namespace IgorSoft.DokanCloudFS
 
         public NtStatus SetEndOfFile(string fileName, long length, IDokanFileInfo info)
         {
+            var context = ((StreamContext)info.Context);
+
+            lock (context) {
+                if (context.Stream == null)
+                {
+                    context.Stream = Stream.Synchronized(new MemoryStream());
+                }
+
+                try
+                {
+                    context.Stream.SetLength(length);
+                }
+                catch (NotSupportedException)
+                {
+                    AsError(nameof(SetEndOfFile), fileName, info, DokanResult.NotImplemented, length.ToString());
+                }
+            }
+
             return AsDebug(nameof(SetEndOfFile), fileName, info, DokanResult.Success, length.ToString(CultureInfo.InvariantCulture));
         }
 
@@ -573,6 +591,19 @@ namespace IgorSoft.DokanCloudFS
             }
 
             return AsDebug(nameof(WriteFile), fileName, info, DokanResult.Success, offset.ToString(CultureInfo.InvariantCulture), $"out {bytesWritten}".ToString(CultureInfo.InvariantCulture));
+        }
+
+        static FileAccess Normalize(FileAccess access)
+        {
+            var normalized = access;
+            if (access.HasFlag(FileAccess.GenericRead))
+                normalized |= FileAccess.ReadData;
+            if (access.HasFlag(FileAccess.GenericWrite))
+                normalized |= FileAccess.WriteData;
+            if (access.HasFlag(FileAccess.GenericAll) || access.HasFlag(FileAccess.MaximumAllowed))
+                normalized |= FileAccess.ReadData | FileAccess.ReadAttributes
+                                                  | FileAccess.WriteData | FileAccess.WriteAttributes;
+            return normalized;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Debugger Display")]
