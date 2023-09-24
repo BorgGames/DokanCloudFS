@@ -143,9 +143,6 @@ namespace IgorSoft.DokanCloudFS
         public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content)
         {
             return ExecuteInSemaphore(() => {
-                if (content.Length == 0)
-                    return new ProxyFileInfoContract(name);
-
                 var gatewayContent = content;
 
                 var result = gateway.NewFileItemAsync(rootName, parent.Id, name, gatewayContent, null).Result;
