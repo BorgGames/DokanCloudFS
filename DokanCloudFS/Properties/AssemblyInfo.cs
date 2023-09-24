@@ -35,7 +35,6 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
-[assembly: CLSCompliant(true)]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("IgorSoft.DokanCloudFS.Mounter")]
 [assembly: InternalsVisibleTo("IgorSoft.DokanCloudFS.Tests")]
