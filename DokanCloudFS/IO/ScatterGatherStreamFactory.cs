@@ -64,7 +64,7 @@ namespace IgorSoft.DokanCloudFS.IO
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static void CreateScatterGatherStreams(int capacity, TimeSpan timeout, out Stream scatterStream, Stream[] gatherStreams)
         {
-            if (capacity <= 0)
+            if (capacity < 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity), $"{nameof(capacity)} must be positive.".ToString(CultureInfo.CurrentCulture));
             if (timeout < defaultTimeout)
                 throw new ArgumentOutOfRangeException(nameof(timeout), $"{nameof(timeout)} must be greater than {defaultTimeout:c}.".ToString(CultureInfo.CurrentCulture));

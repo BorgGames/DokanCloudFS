@@ -115,7 +115,7 @@ namespace IgorSoft.DokanCloudFS.IO
 
         public BlockMap(int capacity)
         {
-            if (capacity <= 0)
+            if (capacity < 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity), $"{nameof(capacity)} must be positive.".ToString(CultureInfo.CurrentCulture));
 
             this.capacity = capacity;

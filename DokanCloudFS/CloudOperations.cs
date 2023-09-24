@@ -475,11 +475,11 @@ namespace IgorSoft.DokanCloudFS
                 throw new ArgumentNullException(nameof(info));
 
             var context = (StreamContext)info.Context;
-            if (length > 0) {
+            lock (context)
+            {
                 if (context.Stream == null) {
-                    var scatterStream = default(Stream);
                     var gatherStreams = new Stream[2];
-                    ScatterGatherStreamFactory.CreateScatterGatherStreams((int)length, out scatterStream, gatherStreams);
+                    ScatterGatherStreamFactory.CreateScatterGatherStreams(checked((int)length), out var scatterStream, gatherStreams);
 
                     context.Stream = new ReadWriteSegregatingStream(scatterStream, gatherStreams[1]);
 
