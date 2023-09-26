@@ -24,7 +24,7 @@ SOFTWARE.
 
 using System;
 using System.Globalization;
-using IgorSoft.CloudFS.Interface.IO;
+using IgorSoft.CloudFS.Interfaces.IO;
 
 namespace IgorSoft.DokanCloudFS
 {
@@ -74,7 +74,7 @@ namespace IgorSoft.DokanCloudFS
             Parent = parent;
         }
 
-        public void Move(ICloudDrive drive, string newName, CloudDirectoryNode destinationDirectory)
+        public void Move(ICloudDrive drive, string newName, CloudDirectoryNode destinationDirectory, bool replace)
         {
             if (drive == null)
                 throw new ArgumentNullException(nameof(drive));
@@ -85,9 +85,12 @@ namespace IgorSoft.DokanCloudFS
             if (Parent == null)
                 throw new InvalidOperationException($"{nameof(Parent)} of {GetType().Name} '{Name}' is null".ToString(CultureInfo.CurrentCulture));
 
-            var moveItem = CreateNew(drive.MoveItem(Contract, newName, destinationDirectory.Contract));
+            var moveItem = CreateNew(drive.MoveItem(Contract, newName, destinationDirectory.Contract, replace: replace));
             if (destinationDirectory.children != null) {
-                destinationDirectory.children.Add(moveItem.Name, moveItem);
+                if (replace)
+                    destinationDirectory.children[moveItem.Name] = moveItem;
+                else
+                    destinationDirectory.children.Add(moveItem.Name, moveItem);
                 moveItem.SetParent(destinationDirectory);
             } else {
                 destinationDirectory.GetChildItems(drive);

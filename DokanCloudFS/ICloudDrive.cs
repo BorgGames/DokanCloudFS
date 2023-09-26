@@ -25,8 +25,8 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.IO;
-using IgorSoft.CloudFS.Interface;
-using IgorSoft.CloudFS.Interface.IO;
+using IgorSoft.CloudFS.Interfaces;
+using IgorSoft.CloudFS.Interfaces.IO;
 
 namespace IgorSoft.DokanCloudFS
 {
@@ -51,7 +51,7 @@ namespace IgorSoft.DokanCloudFS
 
         void SetContent(FileInfoContract target, Stream content);
 
-        FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination);
+        FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace);
 
         DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name);
 

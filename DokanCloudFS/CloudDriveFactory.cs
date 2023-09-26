@@ -26,8 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Composition;
 using System.Globalization;
-using IgorSoft.CloudFS.Interface;
-using IgorSoft.CloudFS.Interface.Composition;
+using IgorSoft.CloudFS.Interfaces;
 using IgorSoft.DokanCloudFS.Parameters;
 
 namespace IgorSoft.DokanCloudFS

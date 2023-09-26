@@ -27,9 +27,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
-using IgorSoft.CloudFS.Interface;
-using IgorSoft.CloudFS.Interface.Composition;
-using IgorSoft.CloudFS.Interface.IO;
+using IgorSoft.CloudFS.Interfaces;
+using IgorSoft.CloudFS.Interfaces.Composition;
+using IgorSoft.CloudFS.Interfaces.IO;
 #if COMPOSITION
 using IgorSoft.DokanCloudFS.Composition;
 #endif
@@ -121,7 +121,7 @@ namespace IgorSoft.DokanCloudFS
             }, nameof(SetContent), true);
         }
 
-        public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination)
+        public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace)
         {
             return ExecuteInSemaphore(() => {
                 var proxySource = source as ProxyFileInfoContract;
@@ -129,7 +129,7 @@ namespace IgorSoft.DokanCloudFS
                     return new ProxyFileInfoContract(movePath);
 
                 Func<FileSystemInfoLocator> locator = () => new FileSystemInfoLocator(source);
-                return gateway.MoveItemAsync(rootName, source.Id, movePath, destination.Id, locator).Result;
+                return gateway.MoveItemAsync(rootName, source.Id, movePath, destination.Id, replace: replace, locator).Result;
             }, nameof(MoveItem), true);
         }
 

@@ -5,7 +5,7 @@
     <RootNamespace>IgorSoft.DokanCloudFS</RootNamespace>
 
     <!-- Package stuff -->
-    <Version>0.0.2</Version>
+    <Version>0.0.3</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>DokanCloudFS library allows mounting various cloud storage services as virtual disks on Windows.</Description>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BorgQueen.CloudFS.Interfaces" Version="0.0.1" />
+    <PackageReference Include="BorgQueen.CloudFS.Interfaces" Version="0.0.2" />
     <PackageReference Include="DokanNet" Version="2.0.5.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="NLog" Version="5.2.4" />

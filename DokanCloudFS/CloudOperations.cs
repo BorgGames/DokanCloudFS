@@ -33,8 +33,7 @@ using System.Threading.Tasks;
 using DokanNet;
 using FileAccess = DokanNet.FileAccess;
 using NLog;
-using IgorSoft.CloudFS.Interface.IO;
-using IgorSoft.DokanCloudFS.Extensions;
+using IgorSoft.CloudFS.Interfaces.IO;
 using IgorSoft.DokanCloudFS.IO;
 
 namespace IgorSoft.DokanCloudFS
@@ -427,7 +426,7 @@ namespace IgorSoft.DokanCloudFS
             if (destinationDirectory == null)
                 return AsWarn(nameof(MoveFile), oldName, info, DokanResult.PathNotFound, newName, replace.ToString(CultureInfo.InvariantCulture));
 
-            item.Move(drive, Path.GetFileName(newName), destinationDirectory);
+            item.Move(drive, Path.GetFileName(newName), destinationDirectory, replace: replace);
 
             return AsTrace(nameof(MoveFile), oldName, info, DokanResult.Success, newName, replace.ToString(CultureInfo.InvariantCulture));
         }

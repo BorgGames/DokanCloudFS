@@ -25,8 +25,8 @@ SOFTWARE.
 using System;
 using System.Globalization;
 using System.Threading;
-using IgorSoft.CloudFS.Interface;
-using IgorSoft.CloudFS.Interface.IO;
+using IgorSoft.CloudFS.Interfaces;
+using IgorSoft.CloudFS.Interfaces.IO;
 
 namespace IgorSoft.DokanCloudFS
 {
