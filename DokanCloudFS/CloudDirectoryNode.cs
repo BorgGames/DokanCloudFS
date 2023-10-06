@@ -57,7 +57,7 @@ namespace IgorSoft.DokanCloudFS
             if (children == null) {
                 lock (Contract) {
                     if (children == null) {
-                        children = drive.GetChildItem(Contract).Select(f => CloudItemNode.CreateNew(f)).ToDictionary(i => i.Name);
+                        children = drive.GetChildItem(Contract).Select(CreateNew).ToDictionary(i => i.Name);
 
                         foreach (var child in children.Values)
                             child.SetParent(this);

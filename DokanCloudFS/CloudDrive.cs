@@ -120,7 +120,7 @@ namespace IgorSoft.DokanCloudFS
         public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace)
         {
             return ExecuteInSemaphore(() => {
-                return !(source is ProxyFileInfoContract) ? gateway.MoveItem(rootName, source.Id, movePath, destination.Id) : new ProxyFileInfoContract(movePath);
+                return gateway.MoveItem(rootName, source.Id, movePath, destination.Id);
             }, nameof(MoveItem), true);
         }
 
@@ -134,12 +134,7 @@ namespace IgorSoft.DokanCloudFS
         public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content)
         {
             return ExecuteInSemaphore(() => {
-                if (content.Length == 0)
-                    return new ProxyFileInfoContract(name);
-
-                var gatewayContent = content;
-
-                var result = gateway.NewFileItem(rootName, parent.Id, name, gatewayContent, null);
+                var result = gateway.NewFileItem(rootName, parent.Id, name, content, null);
                 result.Size = (FileSize)content.Length;
                 return result;
             }, nameof(NewFileItem),true);

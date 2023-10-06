@@ -28,13 +28,16 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 using DokanNet;
-using FileAccess = DokanNet.FileAccess;
+
 using NLog;
+
 using IgorSoft.CloudFS.Interfaces.IO;
 using IgorSoft.DokanCloudFS.IO;
+
+using FileAccess = DokanNet.FileAccess;
 
 namespace IgorSoft.DokanCloudFS
 {
@@ -82,10 +85,6 @@ namespace IgorSoft.DokanCloudFS
         private CloudDirectoryNode root;
 
         private ILogger logger;
-
-        private static readonly IList<FileInformation> emptyDirectoryDefaultFiles = new[] { ".", ".." }.Select(fileName =>
-            new FileInformation() { FileName = fileName, Attributes = FileAttributes.Directory, CreationTime = DateTime.Today, LastWriteTime = DateTime.Today, LastAccessTime = DateTime.Today }
-        ).ToList();
 
         public CloudOperations(ICloudDrive drive, DirectoryInfoContract root, ILogger logger)
         {
@@ -214,7 +213,7 @@ namespace IgorSoft.DokanCloudFS
                         var realAccess = Normalize(access);
                         if (!realAccess.HasFlag(FileAccess.ReadAttributes) && !realAccess.HasFlag(FileAccess.ReadPermissions)
                             && !realAccess.HasFlag(FileAccess.ReadData) && !realAccess.HasFlag(FileAccess.WriteData)
-                            && !realAccess.HasFlag(FileAccess.Delete))
+                                                                           && !realAccess.HasFlag(FileAccess.Delete))
                             return AsDebug(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.NotImplemented);
                         info.Context = new StreamContext(fileItem, realAccess, originalAccess: access);
                     } else {
@@ -282,46 +281,59 @@ namespace IgorSoft.DokanCloudFS
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
 
-            ((StreamContext)info.Context).File.Remove(drive);
+            var context = (StreamContext)info.Context;
+            context.File.Remove(drive);
 
             return AsTrace(nameof(DeleteFile), fileName, info, DokanResult.Success);
         }
 
         public NtStatus FindFiles(string fileName, out IList<FileInformation> files, IDokanFileInfo info)
         {
-            var parent = GetItem(fileName) as CloudDirectoryNode;
+            if (GetItem(fileName) is not CloudDirectoryNode parent)
+            {
+                files = null;
+                return NtStatus.ObjectPathNotFound;
+            }
 
             var childItems = parent.GetChildItems(drive).Where(i => i.IsResolved).ToList();
-            files = childItems.Any()
-                ? childItems.Select(i => new FileInformation() {
-                    FileName = i.Name, Length = (i as CloudFileNode)?.Contract.Size ?? FileSize.Empty,
-                    Attributes = i is CloudDirectoryNode ? FileAttributes.Directory : FileAttributes.NotContentIndexed,
-                    CreationTime = i.Contract.Created.DateTime, LastWriteTime = i.Contract.Updated.DateTime, LastAccessTime = i.Contract.Updated.DateTime
-                }).ToList()
-                : emptyDirectoryDefaultFiles;
+            var infos = childItems.Select(i => ToFileInfo(i.Contract)).ToList();
+
+            if (parent.Contract.Parent != null)
+            {
+                var selfInfo = ToFileInfo(parent.Contract);
+                selfInfo.FileName = ".";
+                var parentInfo = ToFileInfo(parent.Contract.Parent);
+                parentInfo.FileName = "..";
+
+                infos.InsertRange(0, new[] { selfInfo, parentInfo });
+            }
+
+            files = infos;
 
             return AsTrace(nameof(FindFiles), fileName, info, DokanResult.Success, $"out [{files.Count}]".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus FindFilesWithPattern(string fileName, string searchPattern, out IList<FileInformation> files, IDokanFileInfo info)
+        static FileInformation ToFileInfo(FileSystemInfoContract infoContract)
         {
-            if (searchPattern == null)
-                throw new ArgumentNullException(nameof(searchPattern));
+            return new FileInformation
+            {
+                FileName = infoContract.Name,
+                Length = (infoContract as FileInfoContract)?.Size ?? FileSize.Empty,
+                Attributes =
+                    infoContract is DirectoryInfoContract
+                        ? FileAttributes.Directory
+                        : FileAttributes.NotContentIndexed,
+                CreationTime = infoContract.Created.DateTime,
+                LastWriteTime = infoContract.Updated.DateTime,
+                LastAccessTime = infoContract.Updated.DateTime
+            };
+        }
 
-            var parent = GetItem(fileName) as CloudDirectoryNode;
-
-            var childItems = parent.GetChildItems(drive).Where(i => i.IsResolved).ToList();
-            files = childItems.Any()
-                ? childItems
-                    .Where(i => Regex.IsMatch(i.Name, searchPattern.Contains('?') || searchPattern.Contains('*') ? searchPattern.Replace('?', '.').Replace("*", ".*") : "^" + searchPattern + "$"))
-                    .Select(i => new FileInformation() {
-                        FileName = i.Name, Length = (i as CloudFileNode)?.Contract.Size ?? FileSize.Empty,
-                        Attributes = i is CloudDirectoryNode ? FileAttributes.Directory : FileAttributes.NotContentIndexed,
-                        CreationTime = i.Contract.Created.DateTime, LastWriteTime = i.Contract.Updated.DateTime, LastAccessTime = i.Contract.Updated.DateTime
-                    }).ToList()
-                : emptyDirectoryDefaultFiles;
-
-            return AsTrace(nameof(FindFilesWithPattern), fileName, info, DokanResult.Success, searchPattern, $"out [{files.Count}]".ToString(CultureInfo.CurrentCulture));
+        public NtStatus FindFilesWithPattern(string fileName, string searchPattern, out IList<FileInformation> files,
+            IDokanFileInfo info)
+        {
+            files = null;
+            return NtStatus.NotImplemented;
         }
 
         public NtStatus FindStreams(string fileName, out IList<FileInformation> streams, IDokanFileInfo info)
@@ -389,8 +401,7 @@ namespace IgorSoft.DokanCloudFS
         public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, out uint maximumComponentLength, IDokanFileInfo info)
         {
             volumeLabel = drive.DisplayRoot;
-            features = FileSystemFeatures.CaseSensitiveSearch | FileSystemFeatures.CasePreservedNames | FileSystemFeatures.UnicodeOnDisk |
-                       FileSystemFeatures.PersistentAcls | FileSystemFeatures.SupportsRemoteStorage;
+            features = FileSystemFeatures.CasePreservedNames | FileSystemFeatures.UnicodeOnDisk;
             fileSystemName = nameof(DokanCloudFS);
             maximumComponentLength = 250;
 
@@ -483,16 +494,16 @@ namespace IgorSoft.DokanCloudFS
                     context.Stream = new ReadWriteSegregatingStream(scatterStream, gatherStreams[1]);
 
                     context.Task = Task.Run(() => {
-                        try {
-                            context.File.SetContent(drive, gatherStreams[0]);
-                        } catch (Exception ex) {
-                            if (!(ex is UnauthorizedAccessException))
-                                context.File.Remove(drive);
-                            logger.Error($"{nameof(context.File.SetContent)} failed on file '{fileName}' with {ex.GetType().Name} '{ex.Message}'".ToString(CultureInfo.CurrentCulture));
-                            throw;
-                        }
-                    })
-                    .ContinueWith(t => logger.Debug($"{nameof(context.File.SetContent)} finished on file '{fileName}'".ToString(CultureInfo.CurrentCulture)), TaskContinuationOptions.OnlyOnRanToCompletion);
+                            try {
+                                context.File.SetContent(drive, gatherStreams[0]);
+                            } catch (Exception ex) {
+                                if (!(ex is UnauthorizedAccessException))
+                                    context.File.Remove(drive);
+                                logger.Error($"{nameof(context.File.SetContent)} failed on file '{fileName}' with {ex.GetType().Name} '{ex.Message}'".ToString(CultureInfo.CurrentCulture));
+                                throw;
+                            }
+                        })
+                        .ContinueWith(t => logger.Debug($"{nameof(context.File.SetContent)} finished on file '{fileName}'".ToString(CultureInfo.CurrentCulture)), TaskContinuationOptions.OnlyOnRanToCompletion);
                 } else {
                     var scatterStream = (context.Stream as ReadWriteSegregatingStream)?.WriteStream as ScatterStream;
                     if (scatterStream != null)
