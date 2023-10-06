@@ -6,7 +6,7 @@
     <LangVersion>10.0</LangVersion>
 
     <!-- Package stuff -->
-    <Version>0.0.3</Version>
+    <Version>0.0.5</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>DokanCloudFS library allows mounting various cloud storage services as virtual disks on Windows.</Description>
