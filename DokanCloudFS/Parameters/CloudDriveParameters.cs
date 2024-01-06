@@ -30,5 +30,6 @@ namespace IgorSoft.DokanCloudFS.Parameters
     public class CloudDriveParameters
     {
         public IDictionary<string, string> Parameters { get; set; }
+        public bool ThreadSafeGateway { get; set; }
     }
 }

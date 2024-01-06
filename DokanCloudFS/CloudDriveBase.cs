@@ -24,6 +24,7 @@ SOFTWARE.
 
 using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using IgorSoft.CloudFS.Interfaces;
 using IgorSoft.CloudFS.Interfaces.IO;
@@ -34,7 +35,9 @@ namespace IgorSoft.DokanCloudFS
     {
         protected readonly RootName rootName;
 
-        protected DriveInfoContract drive;
+        protected volatile DriveInfoContract drive;
+
+        protected readonly bool threadSafeGateway;
 
         private SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
@@ -44,16 +47,23 @@ namespace IgorSoft.DokanCloudFS
 
         public long? Used => ExecuteInSemaphore(() => GetDrive().UsedSpace, $"get_{nameof(Used)}".ToString(CultureInfo.InvariantCulture));
 
-        protected CloudDriveBase(RootName rootName)
+        protected CloudDriveBase(RootName rootName, bool threadSafeGateway)
         {
             this.rootName = rootName;
             DisplayRoot = rootName.Value;
+            this.threadSafeGateway = threadSafeGateway;
         }
 
-        protected void ExecuteInSemaphore(Action action, string methodName, bool invalidateDrive = false)
+        protected void ExecuteInSemaphore(Action action, [CallerMemberName] string methodName = null)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
+
+            if (threadSafeGateway)
+            {
+                action();
+                return;
+            }
 
             semaphore.Wait();
             try {
@@ -61,16 +71,17 @@ namespace IgorSoft.DokanCloudFS
             } catch (AggregateException ex) when (ex.InnerExceptions.Count == 1) {
                 throw ex.InnerExceptions[0];
             } finally {
-                if (invalidateDrive)
-                    drive = null;
                 semaphore.Release();
             }
         }
 
-        protected T ExecuteInSemaphore<T>(Func<T> func, string methodName, bool invalidateDrive = false)
+        protected T ExecuteInSemaphore<T>(Func<T> func, [CallerMemberName] string methodName = null)
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
+
+            if (threadSafeGateway)
+                return func();
 
             semaphore.Wait();
             try {
@@ -78,11 +89,11 @@ namespace IgorSoft.DokanCloudFS
             } catch (AggregateException ex) when (ex.InnerExceptions.Count == 1) {
                 throw ex.InnerExceptions[0];
             } finally {
-                if (invalidateDrive)
-                    drive = null;
                 semaphore.Release();
             }
         }
+
+        protected void InvalidateDrive() => Interlocked.Exchange(ref drive, null);
 
         protected abstract DriveInfoContract GetDrive();
 

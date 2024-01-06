@@ -45,7 +45,7 @@ namespace IgorSoft.DokanCloudFS
 
         private readonly IDictionary<string, string> parameters;
 
-        public CloudDrive(RootName rootName, ICloudGateway gateway, CloudDriveParameters parameters) : base(rootName)
+        public CloudDrive(RootName rootName, ICloudGateway gateway, CloudDriveParameters parameters) : base(rootName, parameters.ThreadSafeGateway)
         {
             this.gateway = gateway;
             this.parameters = parameters.Parameters;
@@ -55,11 +55,13 @@ namespace IgorSoft.DokanCloudFS
 
         protected override DriveInfoContract GetDrive()
         {
-            if (drive == null) {
-                drive = gateway.GetDrive(rootName, null, parameters);
-                drive.Name = DisplayRoot + Path.VolumeSeparatorChar;
+            var tmp = drive;
+            if (tmp == null) {
+                tmp = gateway.GetDrive(rootName, null, parameters);
+                tmp.Name = DisplayRoot + Path.VolumeSeparatorChar;
+                drive = tmp;
             }
-            return drive;
+            return tmp;
         }
 
         public bool TryAuthenticate()
@@ -70,11 +72,11 @@ namespace IgorSoft.DokanCloudFS
         public RootDirectoryInfoContract GetRoot()
         {
             return ExecuteInSemaphore(() => {
-                GetDrive();
+                var tmp = GetDrive();
                 var root = gateway.GetRoot(rootName, null, parameters);
-                root.Drive = drive;
+                root.Drive = tmp;
                 return root;
-            }, nameof(GetRoot));
+            });
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Language", "CSE0003:Use expression-bodied members")]
@@ -82,7 +84,7 @@ namespace IgorSoft.DokanCloudFS
         {
             return ExecuteInSemaphore(() => {
                 return gateway.GetChildItem(rootName, parent.Id);
-            }, nameof(GetChildItem));
+            });
         }
 
         public Stream GetContent(FileInfoContract source)
@@ -99,7 +101,7 @@ namespace IgorSoft.DokanCloudFS
                 CompositionInitializer.SatisfyImports(content = new TraceStream(nameof(source), source.Name, content));
 #endif
                 return content;
-            }, nameof(GetContent));
+            });
         }
 
         public void SetContent(FileInfoContract target, Stream content)
@@ -111,41 +113,76 @@ namespace IgorSoft.DokanCloudFS
 #if DEBUG && COMPOSITION
                 CompositionInitializer.SatisfyImports(gatewayContent = new TraceStream(nameof(target), target.Name, gatewayContent));
 #endif
-                gateway.SetContent(rootName, target.Id, gatewayContent, null);
-                if (content != gatewayContent)
-                    gatewayContent.Close();
-            }, nameof(SetContent), true);
+                try
+                {
+                    gateway.SetContent(rootName, target.Id, gatewayContent, null);
+                    if (content != gatewayContent)
+                        gatewayContent.Close();
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
+            });
         }
 
         public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace)
         {
             return ExecuteInSemaphore(() => {
-                return gateway.MoveItem(rootName, source.Id, movePath, destination.Id);
-            }, nameof(MoveItem), true);
+                try
+                {
+                    return gateway.MoveItem(rootName, source.Id, movePath, destination.Id);
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
+            });
         }
 
         public DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name)
         {
             return ExecuteInSemaphore(() => {
-                return gateway.NewDirectoryItem(rootName, parent.Id, name);
-            }, nameof(NewDirectoryItem), true);
+                try
+                {
+                    return gateway.NewDirectoryItem(rootName, parent.Id, name);
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
+            });
         }
 
         public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content)
         {
             return ExecuteInSemaphore(() => {
-                var result = gateway.NewFileItem(rootName, parent.Id, name, content, null);
-                result.Size = (FileSize)content.Length;
-                return result;
-            }, nameof(NewFileItem),true);
+                try
+                {
+                    var result = gateway.NewFileItem(rootName, parent.Id, name, content, null);
+                    result.Size = (FileSize)content.Length;
+                    return result;
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
+            });
         }
 
         public void RemoveItem(FileSystemInfoContract target, bool recurse)
         {
             ExecuteInSemaphore(() => {
                 if (!(target is ProxyFileInfoContract))
-                    gateway.RemoveItem(rootName, target.Id, recurse);
-            }, nameof(RemoveItem), true);
+                    try
+                    {
+                        gateway.RemoveItem(rootName, target.Id, recurse);
+                    }
+                    finally
+                    {
+                        InvalidateDrive();
+                    }
+            });
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Debugger Display")]

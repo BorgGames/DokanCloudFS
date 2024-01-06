@@ -44,7 +44,7 @@ namespace IgorSoft.DokanCloudFS
 
         private readonly IDictionary<string, string> parameters;
 
-        public AsyncCloudDrive(RootName rootName, IAsyncCloudGateway gateway, CloudDriveParameters parameters) : base(rootName)
+        public AsyncCloudDrive(RootName rootName, IAsyncCloudGateway gateway, CloudDriveParameters parameters) : base(rootName, parameters.ThreadSafeGateway)
         {
             this.gateway = gateway;
             this.parameters = parameters.Parameters;
@@ -55,11 +55,13 @@ namespace IgorSoft.DokanCloudFS
         protected override DriveInfoContract GetDrive()
         {
             try {
-                if (drive == null) {
-                    drive = gateway.GetDriveAsync(rootName, null, parameters).Result;
-                    drive.Name = DisplayRoot + Path.VolumeSeparatorChar;
+                var tmp = drive;
+                if (tmp == null) {
+                    tmp = gateway.GetDriveAsync(rootName, null, parameters).Result;
+                    tmp.Name = DisplayRoot + Path.VolumeSeparatorChar;
+                    drive = tmp;
                 }
-                return drive;
+                return tmp;
             } catch (AggregateException ex) when (ex.InnerExceptions.Count == 1) {
                 throw ex.InnerExceptions[0];
             }
@@ -73,9 +75,9 @@ namespace IgorSoft.DokanCloudFS
         public RootDirectoryInfoContract GetRoot()
         {
             return ExecuteInSemaphore(() => {
-                GetDrive();
+                var tmp = GetDrive();
                 var root = gateway.GetRootAsync(rootName, null, parameters).Result;
-                root.Drive = drive;
+                root.Drive = tmp;
                 return root;
             }, nameof(GetRoot));
         }
@@ -114,23 +116,47 @@ namespace IgorSoft.DokanCloudFS
                 CompositionInitializer.SatisfyImports(gatewayContent = new TraceStream(nameof(SetContent), target.Name, gatewayContent));
 #endif
                 Func<FileSystemInfoLocator> locator = () => new FileSystemInfoLocator(target);
-                gateway.SetContentAsync(rootName, target.Id, gatewayContent, null, locator).Wait();
+                try
+                {
+                    gateway.SetContentAsync(rootName, target.Id, gatewayContent, null, locator).Wait();
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
                 if (content != gatewayContent)
                     gatewayContent.Close();
-            }, nameof(SetContent), true);
+            }, nameof(SetContent));
         }
 
         public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace)
         {
             return ExecuteInSemaphore(() => {
                 Func<FileSystemInfoLocator> locator = () => new FileSystemInfoLocator(source);
-                return gateway.MoveItemAsync(rootName, source.Id, movePath, destination.Id, replace: replace, locator).Result;
-            }, nameof(MoveItem), true);
+                try
+                {
+                    return gateway.MoveItemAsync(rootName, source.Id, movePath, destination.Id, replace: replace, locator).Result;
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
+            }, nameof(MoveItem));
         }
 
         public DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name)
         {
-            return ExecuteInSemaphore(() => gateway.NewDirectoryItemAsync(rootName, parent.Id, name).Result, nameof(NewDirectoryItem), true);
+            return ExecuteInSemaphore(() =>
+            {
+                try
+                {
+                    return gateway.NewDirectoryItemAsync(rootName, parent.Id, name).Result;
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
+            }, nameof(NewDirectoryItem));
         }
 
         public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content)
@@ -138,18 +164,32 @@ namespace IgorSoft.DokanCloudFS
             return ExecuteInSemaphore(() => {
                 var gatewayContent = content;
 
-                var result = gateway.NewFileItemAsync(rootName, parent.Id, name, gatewayContent, null).Result;
-                result.Size = (FileSize)content.Length;
-                return result;
-            }, nameof(NewFileItem), true);
+                try
+                {
+                    var result = gateway.NewFileItemAsync(rootName, parent.Id, name, gatewayContent, null).Result;
+                    result.Size = (FileSize)content.Length;
+                    return result;
+                }
+                finally
+                {
+                    InvalidateDrive();
+                }
+            }, nameof(NewFileItem));
         }
 
         public void RemoveItem(FileSystemInfoContract target, bool recurse)
         {
             ExecuteInSemaphore(() => {
                 if (!(target is ProxyFileInfoContract))
-                    gateway.RemoveItemAsync(rootName, target.Id, recurse).Wait();
-            }, nameof(RemoveItem), true);
+                    try
+                    {
+                        gateway.RemoveItemAsync(rootName, target.Id, recurse).Wait();
+                    }
+                    finally
+                    {
+                        InvalidateDrive();
+                    }
+            }, nameof(RemoveItem));
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Debugger Display")]

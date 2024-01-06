@@ -3,12 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>IgorSoft.DokanCloudFS</RootNamespace>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>12.0</LangVersion>
 
     <!-- Package stuff -->
-    <Version>0.0.5</Version>
+    <Version>0.0.6</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>0.0.6 - CloudDriveParameters.ThreadSafeGateway option</PackageReleaseNotes>
     <Description>DokanCloudFS library allows mounting various cloud storage services as virtual disks on Windows.</Description>
     <PackageTags>VFS;Virtual File System;Gateway;io;filesystem;cloud;drive;Windows;OneDrive</PackageTags>
 
