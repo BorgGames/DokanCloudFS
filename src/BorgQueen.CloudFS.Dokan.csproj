@@ -6,10 +6,11 @@
     <LangVersion>12.0</LangVersion>
 
     <!-- Package stuff -->
-    <Version>0.0.6.1</Version>
+    <Version>0.0.7</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>0.0.6.1 - embedded symbols
+    <PackageReleaseNotes>0.0.7 - allow extending a few missing features: opening files with extra access modes, file security and attribute manipulation
+0.0.6.1 - embedded symbols
 0.0.6 - CloudDriveParameters.ThreadSafeGateway option</PackageReleaseNotes>
     <Description>DokanCloudFS library allows mounting various cloud storage services as virtual disks on Windows.</Description>
     <PackageTags>VFS;Virtual File System;Gateway;io;filesystem;cloud;drive;Windows;OneDrive</PackageTags>
