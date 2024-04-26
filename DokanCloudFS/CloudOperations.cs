@@ -119,7 +119,7 @@ namespace IgorSoft.DokanCloudFS
             return result;
         }
 
-        public void Cleanup(string fileName, IDokanFileInfo info)
+        public virtual void Cleanup(string fileName, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -159,7 +159,7 @@ namespace IgorSoft.DokanCloudFS
             AsTrace(nameof(Cleanup), fileName, info, DokanResult.Success);
         }
 
-        public void CloseFile(string fileName, IDokanFileInfo info)
+        public virtual void CloseFile(string fileName, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -170,7 +170,7 @@ namespace IgorSoft.DokanCloudFS
             context?.Dispose();
         }
 
-        public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, IDokanFileInfo info)
+        public virtual NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -211,10 +211,11 @@ namespace IgorSoft.DokanCloudFS
                     fileItem = item as CloudFileNode;
                     if (fileItem != null) {
                         var realAccess = Normalize(access);
-                        if (!realAccess.HasFlag(FileAccess.ReadAttributes) && !realAccess.HasFlag(FileAccess.ReadPermissions)
-                            && !realAccess.HasFlag(FileAccess.ReadData) && !realAccess.HasFlag(FileAccess.WriteData)
-                                                                           && !realAccess.HasFlag(FileAccess.Delete))
+                        if (!IsSupported(realAccess))
+                        {
+                            logger?.Warn($"CreateFile(Open): Unsupported access {realAccess}'");
                             return AsDebug(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.NotImplemented);
+                        }
                         info.Context = new StreamContext(fileItem, realAccess, originalAccess: access);
                     } else {
                         info.IsDirectory = item != null;
@@ -246,8 +247,10 @@ namespace IgorSoft.DokanCloudFS
                     }
                     return AsTrace(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.Success);
                 case FileMode.Append:
+                    logger?.Warn("CreateFile(Append): not implemented");
                     return AsError(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.NotImplemented);
                 case FileMode.Truncate:
+                    logger?.Warn("CreateFile(Truncate): not implemented");
                     //fileItem = item as CloudFileNode;
                     //if (fileItem == null)
                     //    return AsDebug(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.FileNotFound);
@@ -262,6 +265,11 @@ namespace IgorSoft.DokanCloudFS
                     return AsError(nameof(CreateFile), fileName, info, access, share, mode, options, attributes, DokanResult.NotImplemented);
             }
         }
+
+        protected virtual bool IsSupported(FileAccess access)
+            => access.HasFlag(FileAccess.ReadAttributes) || access.HasFlag(FileAccess.ReadPermissions)
+            || access.HasFlag(FileAccess.ReadData) || access.HasFlag(FileAccess.WriteData)
+            || access.HasFlag(FileAccess.Delete);
 
         public NtStatus DeleteDirectory(string fileName, IDokanFileInfo info)
         {
@@ -313,7 +321,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(FindFiles), fileName, info, DokanResult.Success, $"out [{files.Count}]".ToString(CultureInfo.CurrentCulture));
         }
 
-        static FileInformation ToFileInfo(FileSystemInfoContract infoContract)
+        protected static FileInformation ToFileInfo(FileSystemInfoContract infoContract)
         {
             return new FileInformation
             {
@@ -365,7 +373,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(GetDiskFreeSpace), null, info, DokanResult.Success, $"out {free}", $"out {total}", $"out {used}".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, IDokanFileInfo info)
+        public virtual NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -385,7 +393,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(GetFileInformation), fileName, info, DokanResult.Success, $"out {{{fileInfo.FileName}, [{fileInfo.Length}], [{fileInfo.Attributes}], {fileInfo.CreationTime}, {fileInfo.LastWriteTime}, {fileInfo.LastAccessTime}}}".ToString(CultureInfo.CurrentCulture));
         }
 
-        public NtStatus GetFileSecurity(string fileName, out FileSystemSecurity security, AccessControlSections sections, IDokanFileInfo info)
+        public virtual NtStatus GetFileSecurity(string fileName, out FileSystemSecurity security, AccessControlSections sections, IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
@@ -422,7 +430,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(LockFile), fileName, info, DokanResult.Success, offset.ToString(CultureInfo.InvariantCulture), length.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus Mounted(string mountPoint, IDokanFileInfo info)
+        public virtual NtStatus Mounted(string mountPoint, IDokanFileInfo info)
         {
             return AsTrace(nameof(Mounted), mountPoint, info, DokanResult.Success);
         }
@@ -442,7 +450,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(MoveFile), oldName, info, DokanResult.Success, newName, replace.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus OpenDirectory(string fileName, IDokanFileInfo info)
+        public virtual NtStatus OpenDirectory(string fileName, IDokanFileInfo info)
         {
             var item = GetItem(fileName) as CloudDirectoryNode;
             if (item == null)
@@ -537,18 +545,19 @@ namespace IgorSoft.DokanCloudFS
             return AsDebug(nameof(SetEndOfFile), fileName, info, DokanResult.Success, length.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, IDokanFileInfo info)
+        public virtual NtStatus SetFileAttributes(string fileName, FileAttributes attributes, IDokanFileInfo info)
         {
             // TODO: Possibly return NotImplemented here
+            logger?.Warn($"SetFileAttributes not implemented: {attributes}");
             return AsDebug(nameof(SetFileAttributes), fileName, info, DokanResult.Success, attributes.ToString());
         }
 
-        public NtStatus SetFileSecurity(string fileName, FileSystemSecurity security, AccessControlSections sections, IDokanFileInfo info)
+        public virtual NtStatus SetFileSecurity(string fileName, FileSystemSecurity security, AccessControlSections sections, IDokanFileInfo info)
         {
             return AsDebug(nameof(SetFileAttributes), fileName, info, DokanResult.NotImplemented, sections.ToString());
         }
 
-        public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, IDokanFileInfo info)
+        public virtual NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, IDokanFileInfo info)
         {
             // TODO: Possibly return NotImplemented here
             return AsDebug(nameof(SetFileTime), fileName, info, DokanResult.Success, creationTime.ToString(), lastAccessTime.ToString(), lastWriteTime.ToString());
@@ -567,7 +576,7 @@ namespace IgorSoft.DokanCloudFS
             return AsTrace(nameof(UnlockFile), fileName, info, DokanResult.Success, offset.ToString(CultureInfo.InvariantCulture), length.ToString(CultureInfo.InvariantCulture));
         }
 
-        public NtStatus Unmounted(IDokanFileInfo info)
+        public virtual NtStatus Unmounted(IDokanFileInfo info)
         {
             if (info == null)
                 throw new ArgumentNullException(nameof(info));
