@@ -1,5 +1,6 @@
 # DokanCloudFS
 **DokanCloudFS** is a virtual filesystem for various publicly accessible cloud storage services on the Microsoft Windows platform.
+It is used by https://borg.games to run Windows games in the peer-to-peer cloud.
 
 [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/BorgGames/DokanCloudFS/blob/master/LICENSE.md)
 [![NuGet Package](https://img.shields.io/nuget/v/BorgQueen.CloudFS.Dokan)](https://www.nuget.org/packages/BorgQueen.CloudFS.Dokan/)
