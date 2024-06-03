@@ -6,10 +6,11 @@
     <LangVersion>12.0</LangVersion>
 
     <!-- Package stuff -->
-    <Version>0.0.7.1</Version>
+    <Version>0.0.8.0</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>0.0.7.1 - fixed crash in CreateFile(Create) when file already exists but its name is different in case
+    <PackageReleaseNotes>0.0.8 - use cancellation tokens for async gateways
+0.0.7.1 - fixed crash in CreateFile(Create) when file already exists but its name is different in case
 0.0.7 - allow extending a few missing features: opening files with extra access modes, file security and attribute manipulation
 0.0.6.1 - embedded symbols
 0.0.6 - CloudDriveParameters.ThreadSafeGateway option</PackageReleaseNotes>
@@ -36,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BorgQueen.CloudFS.Interfaces" Version="0.0.2" />
+    <PackageReference Include="BorgQueen.CloudFS.Interfaces" Version="0.0.3" />
     <PackageReference Include="DokanNet" Version="2.0.5.2" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="NLog" Version="5.2.8" />

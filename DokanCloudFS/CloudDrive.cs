@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 
 using IgorSoft.CloudFS.Interfaces;
 using IgorSoft.CloudFS.Interfaces.Composition;
@@ -52,8 +53,9 @@ namespace IgorSoft.DokanCloudFS
         }
 
         public IPersistGatewaySettings PersistSettings => gateway as IPersistGatewaySettings;
+        public bool SupportsCancellation => false;
 
-        protected override DriveInfoContract GetDrive()
+        protected override DriveInfoContract GetDrive(CancellationToken cancel = default)
         {
             var tmp = drive;
             if (tmp == null) {
@@ -64,12 +66,12 @@ namespace IgorSoft.DokanCloudFS
             return tmp;
         }
 
-        public bool TryAuthenticate()
+        public bool TryAuthenticate(CancellationToken cancel = default)
         {
             return gateway.TryAuthenticate(rootName, null, parameters);
         }
 
-        public RootDirectoryInfoContract GetRoot()
+        public RootDirectoryInfoContract GetRoot(CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 var tmp = GetDrive();
@@ -80,14 +82,14 @@ namespace IgorSoft.DokanCloudFS
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Language", "CSE0003:Use expression-bodied members")]
-        public IEnumerable<FileSystemInfoContract> GetChildItem(DirectoryInfoContract parent)
+        public IEnumerable<FileSystemInfoContract> GetChildItem(DirectoryInfoContract parent, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 return gateway.GetChildItem(rootName, parent.Id);
             });
         }
 
-        public Stream GetContent(FileInfoContract source)
+        public Stream GetContent(FileInfoContract source, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 var gatewayContent = gateway.GetContent(rootName, source.Id).ToSeekableStream();
@@ -104,7 +106,7 @@ namespace IgorSoft.DokanCloudFS
             });
         }
 
-        public void SetContent(FileInfoContract target, Stream content)
+        public void SetContent(FileInfoContract target, Stream content, CancellationToken cancel = default)
         {
             ExecuteInSemaphore(() => {
                 var gatewayContent = content;
@@ -126,7 +128,7 @@ namespace IgorSoft.DokanCloudFS
             });
         }
 
-        public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace)
+        public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 try
@@ -140,7 +142,7 @@ namespace IgorSoft.DokanCloudFS
             });
         }
 
-        public DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name)
+        public DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 try
@@ -154,7 +156,7 @@ namespace IgorSoft.DokanCloudFS
             });
         }
 
-        public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content)
+        public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 try
@@ -170,7 +172,7 @@ namespace IgorSoft.DokanCloudFS
             });
         }
 
-        public void RemoveItem(FileSystemInfoContract target, bool recurse)
+        public void RemoveItem(FileSystemInfoContract target, bool recurse, CancellationToken cancel = default)
         {
             ExecuteInSemaphore(() => {
                 if (!(target is ProxyFileInfoContract))

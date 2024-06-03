@@ -25,6 +25,8 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+
 using IgorSoft.CloudFS.Interfaces;
 using IgorSoft.CloudFS.Interfaces.IO;
 
@@ -40,23 +42,25 @@ namespace IgorSoft.DokanCloudFS
 
         IPersistGatewaySettings PersistSettings { get; }
 
-        bool TryAuthenticate();
+        bool SupportsCancellation { get; }
+
+        bool TryAuthenticate(CancellationToken cancel = default);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
-        RootDirectoryInfoContract GetRoot();
+        RootDirectoryInfoContract GetRoot(CancellationToken cancel = default);
 
-        IEnumerable<FileSystemInfoContract> GetChildItem(DirectoryInfoContract parent);
+        IEnumerable<FileSystemInfoContract> GetChildItem(DirectoryInfoContract parent, CancellationToken cancel = default);
 
-        Stream GetContent(FileInfoContract source);
+        Stream GetContent(FileInfoContract source, CancellationToken cancel = default);
 
-        void SetContent(FileInfoContract target, Stream content);
+        void SetContent(FileInfoContract target, Stream content, CancellationToken cancel = default);
 
-        FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace);
+        FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace, CancellationToken cancel = default);
 
-        DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name);
+        DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name, CancellationToken cancel = default);
 
-        FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content);
+        FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content, CancellationToken cancel = default);
 
-        void RemoveItem(FileSystemInfoContract target, bool recurse);
+        void RemoveItem(FileSystemInfoContract target, bool recurse, CancellationToken cancel = default);
     }
 }

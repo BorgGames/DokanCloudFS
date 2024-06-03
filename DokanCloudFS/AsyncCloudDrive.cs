@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 
 using IgorSoft.CloudFS.Interfaces;
 using IgorSoft.CloudFS.Interfaces.IO;
@@ -52,12 +53,14 @@ namespace IgorSoft.DokanCloudFS
 
         public IPersistGatewaySettings PersistSettings => gateway as IPersistGatewaySettings;
 
-        protected override DriveInfoContract GetDrive()
+        public bool SupportsCancellation => gateway.SupportsCancellation;
+
+        protected override DriveInfoContract GetDrive(CancellationToken cancel)
         {
             try {
                 var tmp = drive;
                 if (tmp == null) {
-                    tmp = gateway.GetDriveAsync(rootName, null, parameters).Result;
+                    tmp = gateway.GetDriveAsync(rootName, null, parameters, cancel).Result;
                     tmp.Name = DisplayRoot + Path.VolumeSeparatorChar;
                     drive = tmp;
                 }
@@ -67,32 +70,30 @@ namespace IgorSoft.DokanCloudFS
             }
         }
 
-        public bool TryAuthenticate()
+        public bool TryAuthenticate(CancellationToken cancel = default)
         {
-            return gateway.TryAuthenticateAsync(rootName, null, parameters).Result;
+            return gateway.TryAuthenticateAsync(rootName, null, parameters, cancel).Result;
         }
 
-        public RootDirectoryInfoContract GetRoot()
+        public RootDirectoryInfoContract GetRoot(CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
-                var tmp = GetDrive();
-                var root = gateway.GetRootAsync(rootName, null, parameters).Result;
+                var tmp = GetDrive(cancel);
+                var root = gateway.GetRootAsync(rootName, null, parameters, cancel).Result;
                 root.Drive = tmp;
                 return root;
             }, nameof(GetRoot));
         }
 
-        public IEnumerable<FileSystemInfoContract> GetChildItem(DirectoryInfoContract parent)
+        public IEnumerable<FileSystemInfoContract> GetChildItem(DirectoryInfoContract parent, CancellationToken cancel = default)
         {
-            return ExecuteInSemaphore(() => {
-                return gateway.GetChildItemAsync(rootName, parent.Id).Result;
-            }, nameof(GetChildItem));
+            return ExecuteInSemaphore(() => gateway.GetChildItemAsync(rootName, parent.Id, cancel).Result, nameof(GetChildItem));
         }
 
-        public Stream GetContent(FileInfoContract source)
+        public Stream GetContent(FileInfoContract source, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
-                var gatewayContent = gateway.GetContentAsync(rootName, source.Id).Result.ToSeekableStream();
+                var gatewayContent = gateway.GetContentAsync(rootName, source.Id, cancel).Result.ToSeekableStream();
 
                 var content = gatewayContent;
                 if (content != gatewayContent)
@@ -106,7 +107,7 @@ namespace IgorSoft.DokanCloudFS
             }, nameof(GetContent));
         }
 
-        public void SetContent(FileInfoContract target, Stream content)
+        public void SetContent(FileInfoContract target, Stream content, CancellationToken cancel = default)
         {
             ExecuteInSemaphore(() => {
                 var gatewayContent = content;
@@ -118,7 +119,7 @@ namespace IgorSoft.DokanCloudFS
                 Func<FileSystemInfoLocator> locator = () => new FileSystemInfoLocator(target);
                 try
                 {
-                    gateway.SetContentAsync(rootName, target.Id, gatewayContent, null, locator).Wait();
+                    gateway.SetContentAsync(rootName, target.Id, gatewayContent, null, locator, cancel).Wait();
                 }
                 finally
                 {
@@ -129,13 +130,13 @@ namespace IgorSoft.DokanCloudFS
             }, nameof(SetContent));
         }
 
-        public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace)
+        public FileSystemInfoContract MoveItem(FileSystemInfoContract source, string movePath, DirectoryInfoContract destination, bool replace, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 Func<FileSystemInfoLocator> locator = () => new FileSystemInfoLocator(source);
                 try
                 {
-                    return gateway.MoveItemAsync(rootName, source.Id, movePath, destination.Id, replace: replace, locator).Result;
+                    return gateway.MoveItemAsync(rootName, source.Id, movePath, destination.Id, replace: replace, locator, cancel).Result;
                 }
                 finally
                 {
@@ -144,13 +145,13 @@ namespace IgorSoft.DokanCloudFS
             }, nameof(MoveItem));
         }
 
-        public DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name)
+        public DirectoryInfoContract NewDirectoryItem(DirectoryInfoContract parent, string name, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() =>
             {
                 try
                 {
-                    return gateway.NewDirectoryItemAsync(rootName, parent.Id, name).Result;
+                    return gateway.NewDirectoryItemAsync(rootName, parent.Id, name, cancel).Result;
                 }
                 finally
                 {
@@ -159,14 +160,14 @@ namespace IgorSoft.DokanCloudFS
             }, nameof(NewDirectoryItem));
         }
 
-        public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content)
+        public FileInfoContract NewFileItem(DirectoryInfoContract parent, string name, Stream content, CancellationToken cancel = default)
         {
             return ExecuteInSemaphore(() => {
                 var gatewayContent = content;
 
                 try
                 {
-                    var result = gateway.NewFileItemAsync(rootName, parent.Id, name, gatewayContent, null).Result;
+                    var result = gateway.NewFileItemAsync(rootName, parent.Id, name, gatewayContent, null, cancel).Result;
                     result.Size = (FileSize)content.Length;
                     return result;
                 }
@@ -177,13 +178,13 @@ namespace IgorSoft.DokanCloudFS
             }, nameof(NewFileItem));
         }
 
-        public void RemoveItem(FileSystemInfoContract target, bool recurse)
+        public void RemoveItem(FileSystemInfoContract target, bool recurse, CancellationToken cancel = default)
         {
             ExecuteInSemaphore(() => {
                 if (!(target is ProxyFileInfoContract))
                     try
                     {
-                        gateway.RemoveItemAsync(rootName, target.Id, recurse).Wait();
+                        gateway.RemoveItemAsync(rootName, target.Id, recurse, cancel).Wait();
                     }
                     finally
                     {

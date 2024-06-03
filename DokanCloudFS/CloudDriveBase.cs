@@ -95,7 +95,7 @@ namespace IgorSoft.DokanCloudFS
 
         protected void InvalidateDrive() => Interlocked.Exchange(ref drive, null);
 
-        protected abstract DriveInfoContract GetDrive();
+        protected abstract DriveInfoContract GetDrive(CancellationToken cancel = default);
 
         public void Dispose()
         {
