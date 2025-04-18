@@ -481,7 +481,16 @@ namespace IgorSoft.DokanCloudFS
                     }
 
                 context.Stream.Position = offset;
-                bytesRead = context.Stream.Read(buffer, 0, buffer.Length);
+                bytesRead = 0;
+                // workaround for https://github.com/dokan-dev/dokan-dotnet/issues/352 - must read as much as possible
+                while (bytesRead < buffer.Length)
+                {
+                    int remaining = buffer.Length - bytesRead;
+                    int read = context.Stream.Read(buffer, offset: bytesRead, count: remaining);
+                    if (read == 0)
+                        break;
+                    bytesRead += read;
+                }
             }
 
             return AsDebug(nameof(ReadFile), fileName, info, DokanResult.Success, offset.ToString(CultureInfo.InvariantCulture), $"out {bytesRead}".ToString(CultureInfo.InvariantCulture));
